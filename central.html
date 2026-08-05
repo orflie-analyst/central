@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Central Orflie</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<main class="main-largo">
+  <div class="central-hero">
+    <img src="assets/orflie-logo.png" alt="Orflie" />
+    <p>Portal de acesso aos sistemas internos</p>
+  </div>
+
+  <div class="card">
+    <h2>Sistemas</h2>
+    <div class="sistemas-grid" id="sistemas-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2>Quadro de Avisos</h2>
+    <ul class="lista-avisos" id="lista-avisos">
+      <li class="aviso-vazio">Carregando...</li>
+    </ul>
+  </div>
+
+  <div class="card hidden" id="card-novo-aviso">
+    <h2>Publicar aviso</h2>
+    <form id="form-aviso">
+      <label for="aviso-titulo">Título</label>
+      <input type="text" id="aviso-titulo" required maxlength="120" />
+
+      <label for="aviso-texto">Texto</label>
+      <textarea id="aviso-texto" required maxlength="2000"></textarea>
+
+      <button class="btn" type="submit">Publicar</button>
+      <p class="erro hidden" id="erro-aviso"></p>
+    </form>
+  </div>
+</main>
+
+<script type="module" src="app/central.js"></script>
+</body>
+</html>
