@@ -99,6 +99,6 @@ pro hub de qualquer um dos sistemas, não só entrar por ele.
 Login único com ServiceOrder e Updates aplicado: `firebase-init.js` aponta pro
 projeto compartilhado, `auth.js` ganhou `signup()`, `index.html` ganhou o form de
 autocadastro, `central.js` lista os três sistemas (ServiceOrder, Updates,
-Fluxograma). Pendente: migrar os dados antigos de `avisos` e o usuário admin do
-projeto `orflie-central` (desativado, mantido como rede de segurança) pro
-`orflie-serviceorder`.
+Fluxograma). Não havia dados de `avisos` a migrar nem usuário admin a recriar
+(Arnaldo já tinha conta em `orflie-serviceorder`) — projeto `orflie-central`
+antigo mantido desativado, como rede de segurança.
