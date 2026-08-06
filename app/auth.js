@@ -1,14 +1,29 @@
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { auth, db } from "./firebase-init.js";
 import { el } from "./dom.js";
+
+// Auto-cadastro (migração de login único — o projeto Firebase agora é compartilhado com
+// ServiceOrder e Updates, então usa a mesma regra de domínio e o mesmo formato de doc).
+export const DOMINIOS_PERMITIDOS = ["orflie.com", "orflie.com.br"];
+
+function dominioPermitido(email) {
+  const lower = email.toLowerCase();
+  return DOMINIOS_PERMITIDOS.some((d) => lower.endsWith(`@${d}`));
+}
 
 export function login(email, senha) {
   return signInWithEmailAndPassword(auth, email, senha);
@@ -16,6 +31,25 @@ export function login(email, senha) {
 
 export function logout() {
   return signOut(auth);
+}
+
+// Mesmo formato de documento que o auto-cadastro do ServiceOrder grava (mesma coleção
+// "usuarios", compartilhada) — inclui departamentosPrestador:[] mesmo sem uso aqui no
+// Central, só pra não deixar o campo ausente nesse doc.
+export async function signup(nome, email, senha) {
+  if (!dominioPermitido(email)) {
+    throw new Error(`Use um email @${DOMINIOS_PERMITIDOS.join(" ou @")}.`);
+  }
+  const cred = await createUserWithEmailAndPassword(auth, email, senha);
+  await setDoc(doc(db, "usuarios", cred.user.uid), {
+    nome,
+    email,
+    isAdmin: false,
+    departamentosPrestador: [],
+    ativo: true,
+    criadoEm: serverTimestamp(),
+  });
+  return cred.user;
 }
 
 // Troca a própria senha do usuário logado. Exige a senha atual porque o Firebase

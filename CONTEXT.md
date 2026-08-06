@@ -1,35 +1,46 @@
 # Central — Orflie
 
-Portal interno de acesso aos sistemas da Orflie: logo, cards linkando pra cada
-sistema publicado (Sistema de Ordem de Serviço, Fluxograma Organizacional, e
-qualquer um novo que vier depois) e um quadro de avisos institucional. Pensado
-como ponto de entrada único — a ideia é que os colaboradores comecem por aqui e
-cliquem no sistema que precisam, em vez de guardar várias URLs separadas.
+Portal interno de acesso aos sistemas da Orflie e **porta de entrada única**: logo,
+cards linkando pra cada sistema publicado (Sistema de Ordem de Serviço, Updates, e
+Fluxograma Organizacional) e um quadro de avisos institucional. Pensado como ponto
+de entrada único — a ideia é que os colaboradores comecem por aqui e cliquem no
+sistema que precisam, em vez de guardar várias URLs separadas.
 
-Terceiro projeto irmão de [ServiceOrder](../ServiceOrder/CONTEXT.md) e
+Projeto irmão de [ServiceOrder](../ServiceOrder/CONTEXT.md),
+[Updates](https://github.com/orflie-analyst/updates) e
 [FluxogramaOrganizacional](../FluxogramaOrganizacional/CONTEXT.md) — mesma stack e
 a maior parte do código reaproveitados de lá (`app/dom.js`, `app/auth.js`,
-`admin.html`, `conta.html`, `style.css`/logo), mas repositório e projeto Firebase
-**próprios**, como os outros dois.
+`admin.html`, `conta.html`, `style.css`/logo).
 
 ## Stack
 
-- Firebase Auth (email/senha) + Firestore. **Sem auto-cadastro** — mesma decisão do
-  Fluxograma: só admin cria conta.
+- Firebase Auth (email/senha) + Firestore. **Auto-cadastro habilitado** em
+  `index.html` para qualquer email `@orflie.com`/`@orflie.com.br` (decisão de
+  login único, 2026-08) — mesmo autocadastro existe no ServiceOrder e no Updates,
+  todos escrevem no mesmo doc.
 - Site estático (HTML/CSS/JS módulo, sem build) publicado no GitHub Pages.
+- **Projeto Firebase compartilhado com ServiceOrder e Updates** (login único,
+  2026-08): os três autenticam contra `orflie-serviceorder` — uma conta criada em
+  qualquer um dos três já funciona nos outros dois. **Fluxograma Organizacional
+  fica de fora dessa unificação de propósito** — projeto Firebase próprio, login
+  independente, uso exclusivo da diretoria.
+- Não existe mais `firebase.json`/`.firebaserc`/`firestore.rules` neste
+  repositório — quem possui e deploya as regras é o repositório do ServiceOrder
+  (`orflie-analyst/serviceorder/firestore.rules`, seção `avisos` no fim do
+  arquivo).
 
 ## Contas
 
-- **GitHub**: repo `orflie-analyst/central`, mesma conta usada nos outros dois.
-- **Firebase**: projeto próprio `orflie-central` (ver `.firebaserc`), na conta
-  Google `arnaldo.hungria@orflie.com`.
+- **GitHub**: repo `orflie-analyst/central`, mesma conta usada nos outros.
+- **Firebase**: `orflie-serviceorder` — **não é mais projeto próprio** (antes era
+  `orflie-central`, migrado em 2026-08 pra login único; config antigo preservado
+  no histórico do git caso precise reverter).
 
 ## Modelo de dados (Firestore)
 
-- `usuarios/{uid}`: `nome`, `email`, `isAdmin`, `ativo` — mesmo formato dos outros
-  dois projetos (contas **não são compartilhadas** entre os três; um login aqui não
-  serve pra entrar no ServiceOrder ou no Fluxograma, cada um tem sua própria base
-  de usuários).
+- `usuarios/{uid}`: `nome`, `email`, `isAdmin`, `departamentosPrestador`, `ativo`,
+  `criadoEm` — **coleção compartilhada** com ServiceOrder e Updates (mesmo doc,
+  mesmo projeto). Um login aqui já serve pra entrar nos outros dois.
 - `avisos/{avisoId}`: `titulo`, `texto`, `autorId`, `autorNome`, `criadoEm`. Mural
   institucional — qualquer usuário ativo lê, só admin publica/exclui (não é um
   mural aberto tipo fórum).
@@ -45,22 +56,28 @@ Code).
 
 ## Regras de segurança
 
-`usuarios`: só admin cria/gerencia. `avisos`: leitura pra qualquer usuário ativo,
+Não há `firestore.rules` neste repositório — as regras de `usuarios`/`avisos`
+vivem no `firestore.rules` do repositório `orflie-analyst/serviceorder` (projeto
+compartilhado). Resumo: `usuarios` só admin cria/gerencia (exceto autocadastro,
+sempre com privilégios mínimos); `avisos` leitura pra qualquer usuário ativo,
 escrita (criar/editar/excluir) só admin.
 
 ## Páginas
 
-- `index.html` — login (sem opção de criar conta).
+- `index.html` — login **e auto-cadastro** (toggle entre os dois forms; cadastro
+  exige email `@orflie.com`/`@orflie.com.br`).
 - `central.html` — a página principal: logo grande, grid de cards de sistemas
   (`.sistema-card`, cada um com cor própria via `--sistema-cor`), e o quadro de
   avisos (lista + formulário de publicar, visível só pra admin) com sincronização
   em tempo real via `onSnapshot`.
-- `admin.html` — CRUD de usuário (criar + editar nome/isAdmin/ativo).
+- `admin.html` — CRUD de usuário (criar + editar nome/isAdmin/ativo). Como
+  `isAdmin` é compartilhado, promover alguém aqui promove no ServiceOrder e no
+  Updates também.
 - `conta.html` — trocar a própria senha.
 
 ## Navegação entre sistemas
 
-`app/auth.js`/`renderTopbar()` nos outros dois projetos (ServiceOrder e
+`app/auth.js`/`renderTopbar()` nos outros projetos (ServiceOrder, Updates e
 FluxogramaOrganizacional) ganhou um link "← Central" apontando pra
 `https://orflie-analyst.github.io/central/`, pra fechar o ciclo — dá pra voltar
 pro hub de qualquer um dos sistemas, não só entrar por ele.
@@ -77,6 +94,11 @@ pro hub de qualquer um dos sistemas, não só entrar por ele.
   verificar uma mudança recém-publicada sem esperar até 10 min, importar o módulo
   com `?v=` cache-buster ou usar `curl` direto confirma o que já está na origem.
 
-## Status
+## Status (2026-08-07)
 
-Em construção — ver o plano/histórico da sessão que criou este projeto.
+Login único com ServiceOrder e Updates aplicado: `firebase-init.js` aponta pro
+projeto compartilhado, `auth.js` ganhou `signup()`, `index.html` ganhou o form de
+autocadastro, `central.js` lista os três sistemas (ServiceOrder, Updates,
+Fluxograma). Pendente: migrar os dados antigos de `avisos` e o usuário admin do
+projeto `orflie-central` (desativado, mantido como rede de segurança) pro
+`orflie-serviceorder`.

@@ -27,6 +27,12 @@ const SISTEMAS = [
     url: "https://orflie-analyst.github.io/fluxograma-organizacional/",
     cor: "#3b82f6",
   },
+  {
+    nome: "Updates",
+    desc: "Registre a cópia do update enviado ao cliente no final do dia.",
+    url: "https://orflie-analyst.github.io/updates/",
+    cor: "#2f8f5b",
+  },
 ];
 
 requireAuth((user, perfil) => {
