@@ -28,23 +28,27 @@ const SISTEMAS = [
     cor: "#3b82f6",
   },
   {
-    nome: "Updates",
-    desc: "Registre a cópia do update enviado ao cliente no final do dia.",
+    nome: "Incentivo Orflie Day",
+    desc: "Lançamento de dados do Programa de Incentivo pelos líderes de squad e RH.",
     url: "https://orflie-analyst.github.io/updates/",
     cor: "#2f8f5b",
+    // Acesso restrito: só quem tem squad, podeLancarCompromisso ou é admin — não mostra
+    // o card pra quem não vai conseguir entrar mesmo.
+    visivel: (perfil) => !!perfil.isAdmin || !!perfil.squad || !!perfil.podeLancarCompromisso,
   },
 ];
 
 requireAuth((user, perfil) => {
   renderTopbar("central.html", perfil);
-  renderSistemas();
+  renderSistemas(perfil);
   carregarAvisos(user, perfil);
 });
 
-function renderSistemas() {
+function renderSistemas(perfil) {
   const grid = document.getElementById("sistemas-grid");
   clear(grid);
   for (const s of SISTEMAS) {
+    if (s.visivel && !s.visivel(perfil)) continue;
     grid.appendChild(
       el("a", { class: "sistema-card", href: s.url, style: `--sistema-cor: ${s.cor};` }, [
         el("div", { class: "nome" }, s.nome),
